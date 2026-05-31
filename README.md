@@ -112,8 +112,10 @@ At 3× the alert volume, the model prevents **2.4× more fraud losses**.
 ![Calibration curve — train vs test](imgs/calibration.png)
 
 - Train Brier score: **0.0016** · Test Brier score: **0.0021**
-- Test calibration curve runs above the diagonal — model slightly **underestimates** fraud probability on test, consistent with the fraud rate increase in Nov–Dec (concept drift)
+- Both curves run **below** the diagonal — the model **overestimates** fraud probability. `scale_pos_weight` inflates predicted scores above true probabilities during training.                              - The test curve sits closer to the diagonal than train because the test fraud rate nearly doubled (0.196% → 0.401%), partially offsetting the overestimation.
 
+**Fix — Isotonic Regression calibration**: fit a monotonic step function on a held-out validation set that maps raw model scores to true probabilities. Unlike Platt scaling (logistic), isotonic regression makes no distributional assumption and handles the non-linear shape visible in the chart. Apply with `CalibratedClassifierCV(model, method='isotonic', cv='prefit')` after model training. Re-calibrate whenever the model is retrained or the fraud rate shifts significantly.
+  
 ### Feature Importance — SHAP
 
 ![SHAP feature importance](imgs/shap_importance.png)
